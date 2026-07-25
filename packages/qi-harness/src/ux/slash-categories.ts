@@ -52,7 +52,10 @@ const NAME_RULES: ReadonlyArray<{ category: SlashCategory; names: readonly strin
 	{ category: "Agent", names: ["run", "subagents", "subagent", "agents", "agent"] },
 	{ category: "Goal", names: ["goal"] },
 	{ category: "MCP", names: ["mcp"] },
-	{ category: "Tools", names: ["ps", "process", "processes", "lsp"] },
+	{
+		category: "Tools",
+		names: ["ps", "process", "processes", "lsp", "harness-diff", "harness-doctor", "harness-setup", "harness-mode"],
+	},
 ];
 
 /**

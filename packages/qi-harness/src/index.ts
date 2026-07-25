@@ -12,6 +12,7 @@ import { registerDoctorCommand } from "./commands/doctor.js";
 import { registerSetupCommand } from "./commands/setup.js";
 import { ModeMutex } from "./mode/mutex.js";
 import { registerDiffSplit } from "./ux/diff-split.js";
+import { registerEditWriteDiff } from "./ux/edit-write-diff.js";
 import { registerSlashCategories } from "./ux/slash-categories.js";
 
 export type { DoctorInput, DoctorReport } from "./commands/doctor.js";
@@ -21,6 +22,7 @@ export { ModeMutex } from "./mode/mutex.js";
 export { runDoctorChecks, compareSemverIsh } from "./commands/doctor.js";
 export { formatSplitDiff } from "./ux/diff-split.js";
 export { matchCommandCategory, CATEGORY_ORDER, regroupSlashSuggestions } from "./ux/slash-categories.js";
+export { looksLikeNetworkError, readPlanModeEnabled } from "./adapters/plan-goal.js";
 
 const LOADED_ENTRY = "qi-harness-loaded";
 const MIN_PI_VERSION = "0.80.6";
@@ -33,6 +35,7 @@ export default async function (pi: ExtensionAPI): Promise<void> {
 	registerPlanGoalMutex(pi, mutex);
 	registerSlashCategories(pi);
 	registerDiffSplit(pi);
+	registerEditWriteDiff(pi);
 
 	let notifiedLoad = false;
 

@@ -1,4 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { setupProcessCommands } from "./commands";
 import { configLoader } from "./config";
 import { setupProcessesHooks } from "./hooks";
 import { ProcessManager } from "./manager";
@@ -39,4 +40,5 @@ export default async function (pi: ExtensionAPI) {
 
   setupProcessesHooks(pi, manager);
   setupProcessesTools(pi, manager);
+  setupProcessCommands(pi, manager);
 }

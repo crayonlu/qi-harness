@@ -172,6 +172,29 @@ export function runDoctorChecks(input: DoctorInput): DoctorReport {
 		);
 	}
 
+	// Statusline vs starship mutual exclusion (P2)
+	const hasStatusline = pathIncludes(
+		paths,
+		"pi-statusline",
+		"@narumitw/pi-statusline",
+		"narumitw/pi-statusline",
+	);
+	const hasStarship = pathIncludes(paths, "starship", "pi-starship", "@narumitw/pi-starship");
+	if (hasStatusline && hasStarship) {
+		pushIssue(
+			report,
+			force,
+			"Conflict: both pi-statusline and a starship status extension are loaded. Keep only one statusline provider.",
+		);
+	} else if (hasStatusline) {
+		report.info.push("pi-statusline loaded.");
+	}
+
+	const hasRetry = pathIncludes(paths, "pi-retry", "@narumitw/pi-retry", "narumitw/pi-retry");
+	if (hasRetry) {
+		report.info.push("pi-retry loaded.");
+	}
+
 	// Duplicate /goal implementations
 	const goalPaths = matchingPaths(
 		paths,

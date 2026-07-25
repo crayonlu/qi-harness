@@ -123,4 +123,31 @@ describe("runDoctorChecks", () => {
 		});
 		expect(report.info.some((i) => i.includes("/todo"))).toBe(true);
 	});
+
+	it("detects statusline + starship conflict", () => {
+		const report = runDoctorChecks({
+			...base,
+			piVersion: "0.82.0",
+			loadedExtensionPaths: [
+				"/x/node_modules/@narumitw/pi-statusline/src/index.ts",
+				"/x/node_modules/@narumitw/pi-starship/src/index.ts",
+			],
+		});
+		expect(report.ok).toBe(false);
+		expect(report.errors.some((e) => /statusline|starship/i.test(e))).toBe(true);
+	});
+
+	it("notes statusline and retry when present alone", () => {
+		const report = runDoctorChecks({
+			...base,
+			piVersion: "0.82.0",
+			loadedExtensionPaths: [
+				"/x/node_modules/@narumitw/pi-statusline/src/index.ts",
+				"/x/node_modules/@narumitw/pi-retry/src/index.ts",
+			],
+		});
+		expect(report.ok).toBe(true);
+		expect(report.info.some((i) => i.includes("pi-statusline"))).toBe(true);
+		expect(report.info.some((i) => i.includes("pi-retry"))).toBe(true);
+	});
 });

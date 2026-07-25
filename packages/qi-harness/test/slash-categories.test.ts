@@ -31,9 +31,16 @@ describe("matchCommandCategory", () => {
 		expect(matchCommandCategory("lsp")).toBe("Tools");
 	});
 
+	it("maps harness commands to Tools", () => {
+		expect(matchCommandCategory("harness-doctor")).toBe("Tools");
+		expect(matchCommandCategory("harness-setup")).toBe("Tools");
+		expect(matchCommandCategory("harness-mode")).toBe("Tools");
+		expect(matchCommandCategory("harness-diff")).toBe("Tools");
+	});
+
 	it("falls back to Other", () => {
-		expect(matchCommandCategory("harness-doctor")).toBe("Other");
 		expect(matchCommandCategory("xyzzy")).toBe("Other");
+		expect(matchCommandCategory("foo-bar")).toBe("Other");
 	});
 });
 

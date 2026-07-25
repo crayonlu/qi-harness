@@ -22,21 +22,21 @@ Document these freezes in `/harness-setup` and README. Do not imply `#11` or `#1
 |---|------------|-------|----------|-------|
 | 1 | Slash secondary categories | **P0** | Owned UX (`slash-categories.ts`) | Autocomplete wrapper; Builtin / Session / Agent / Tools / MCP / Goal / Other |
 | 2 | Subagent bg / blocking / parallel | **P0** | Pin `pi-subagents` | Doctor rejects dual subagent stacks |
-| 3 | Plan / build | **P0** | Pin `@narumitw/pi-plan-mode` + `/build` guidance | Mutex with goal |
+| 3 | Plan / build | **P0** | Pin `@narumitw/pi-plan-mode` + `/build` → `/plan implement` | Mutex with goal |
 | 4 | Ask user question | **P0** | Pin `@juicesharp/rpiv-ask-user-question` | — |
 | 5 | MCP | **P0** | Pin `pi-mcp-adapter` | — |
 | 6 | `/btw` | **P0** | Pin `@juicesharp/rpiv-btw` | Doctor rejects concurrent `pi-btw` |
 | 7 | Todo | **P0** | Pin `@juicesharp/rpiv-todo` | `/todos` or `/todo` |
 | 8 | `/cleanup` | **P0** | Owned `qi-cleanup` | — |
-| 9 | Bash background | **P1** | Owned `qi-bash-bg` | — |
+| 9 | Bash background | **P1** | Owned `qi-bash-bg` | `process` tool + `/ps` `/ps:logs` `/ps:kill` `/ps:clear` |
 | 10 | `/rewind` | **P1** | Owned `qi-rewind` | — |
 | 11 | Double Enter flush | — | **Dropped** | Explicit freeze |
 | 12 | Esc submit regret refill | — | **Not claimed** | Upstream / future epic only |
 | 13 | Subagent model inherit | **P0** | Via `pi-subagents` | — |
 | 14 | LSP | **P1** | Pin `@narumitw/pi-lsp` | — |
-| 15 | Responsive split diff +/- | **P1** | Owned (`diff-split.ts`, `/harness-diff`) | width &gt; 120 side-by-side; else stacked |
+| 15 | Responsive split diff +/- | **P1** | Owned (`diff-split.ts`, edit/write `renderResult`, `/harness-diff`) | width &gt; 120 side-by-side; else stacked |
 | 16 | Backlog / discuss | — | Open | — |
-| 17 | `/goal` | **P0** | Pin `@narumitw/pi-goal` + adapter | Mutex + doctor; network auto-pause = **P2** |
+| 17 | `/goal` | **P0** | Pin `@narumitw/pi-goal` + adapter | Mutex enforced (tool block + auto `/goal pause`); network auto-pause = **P2** |
 
 ## Stage gates
 
@@ -56,16 +56,17 @@ Document these freezes in `/harness-setup` and README. Do not imply `#11` or `#1
 ### P2 — polish
 
 - Goal: network-like failure → `/goal pause` (harness listens on `agent_end`; no `session_error` event in ExtensionAPI)
-- Optional statusline / retry Pins with doctor mutual exclusion
+- Pin `@narumitw/pi-statusline` + `@narumitw/pi-retry`; doctor rejects statusline + starship mix
 - Upstream contributions: `RegisteredCommand.category`, Esc pending-submission API (enables future `#12`)
 
 ## Mode mutex (plan ↔ goal)
 
 | Action | Rule |
 |--------|------|
-| Start goal while plan active | **Reject** (`canStartGoal().ok === false`) |
-| Enter plan while goal active | **Allow** + `pauseGoalRequested` / `pauseGoal: true` |
+| Start goal while plan active | **Reject** — auto `/goal pause` on `pi-goal:state`; block `goal_*` tools |
+| Enter plan while goal active | **Allow** + auto `/goal pause` |
 | Observability | `/harness-mode`, status key `qi-harness-mode` |
+| `/build` | Runs `/plan implement` (real exit + implement handoff) |
 
 ## Doctor hard failures (unless `--force`)
 
@@ -79,7 +80,7 @@ Document these freezes in `/harness-setup` and README. Do not imply `#11` or `#1
 
 | Kind | Packages |
 |------|----------|
-| Pin | `pi-subagents`, `pi-mcp-adapter`, `@narumitw/pi-plan-mode`, `@narumitw/pi-goal`, `@narumitw/pi-lsp`, `@juicesharp/rpiv-*` |
+| Pin | `pi-subagents`, `pi-mcp-adapter`, `@narumitw/pi-plan-mode`, `@narumitw/pi-goal`, `@narumitw/pi-lsp`, `@narumitw/pi-statusline`, `@narumitw/pi-retry`, `@juicesharp/rpiv-*` |
 | Owned | `@crayonlu/qi-cleanup`, `@crayonlu/qi-bash-bg`, `@crayonlu/qi-rewind`, harness UX (slash, diff, doctor, setup, mutex) |
 
 ## Explicit non-goals

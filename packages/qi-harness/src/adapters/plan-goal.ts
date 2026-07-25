@@ -3,9 +3,10 @@
  *
  * Existing `/plan` and `/goal` come from Pin packages — we cannot wrap their
  * handlers. Instead we:
- * - track mode via custom session entries + status
- * - expose `/build` as a symmetric exit-plan guidance command
+ * - track mode via custom session entries + status + plan-mode-state / pi-goal events
+ * - expose `/build` as a real alias that runs `/plan implement`
  * - expose `/harness-mode` for observability
+ * - enforce mutex: block goal tools while plan active; auto-pause goal on conflict
  * - on agent_end, optionally auto `/goal pause` on network-like failures (P2)
  */
 
@@ -14,6 +15,8 @@ import type { ModeMutex } from "../mode/mutex.js";
 
 const ENTRY_TYPE = "qi-harness-mode";
 const STATUS_KEY = "qi-harness-mode";
+const PLAN_STATE_ENTRY = "plan-mode-state";
+const GOAL_STATE_CHANNEL = "pi-goal:state";
 
 const NETWORK_ERROR_PATTERNS: readonly RegExp[] = [
 	/\bECONNRESET\b/i,
@@ -36,6 +39,12 @@ interface ModeEntryData {
 	goalActive: boolean;
 	pauseGoalRequested: boolean;
 	updatedAt: number;
+}
+
+interface GoalStatePayload {
+	goalId?: string;
+	status?: string;
+	reason?: string;
 }
 
 function textFromMessage(message: unknown): string {
@@ -88,11 +97,31 @@ function hydrateFromSession(ctx: ExtensionContext, mutex: ModeMutex): void {
 		if (!data) continue;
 		mutex.setPlan(Boolean(data.planActive));
 		mutex.setGoal(Boolean(data.goalActive));
-		if (data.pauseGoalRequested && data.goalActive) {
-			mutex.canEnterPlan(); // re-assert pause flag when goal still active
-		}
 		return;
 	}
+}
+
+/** Authoritative plan-mode enabled flag from `@narumitw/pi-plan-mode` session state. */
+export function readPlanModeEnabled(ctx: ExtensionContext): boolean {
+	const branch =
+		typeof ctx.sessionManager.getBranch === "function"
+			? ctx.sessionManager.getBranch()
+			: ctx.sessionManager.getEntries();
+	for (let i = branch.length - 1; i >= 0; i--) {
+		const entry = branch[i] as { type?: string; customType?: string; data?: unknown };
+		if (entry?.type !== "custom" || entry.customType !== PLAN_STATE_ENTRY) continue;
+		const data = entry.data as { enabled?: boolean } | undefined;
+		return data?.enabled === true;
+	}
+	return false;
+}
+
+function syncPlanFromSession(ctx: ExtensionContext, mutex: ModeMutex): boolean {
+	const enabled = readPlanModeEnabled(ctx);
+	if (enabled !== mutex.snapshot().planActive) {
+		mutex.setPlan(enabled);
+	}
+	return enabled;
 }
 
 /**
@@ -124,77 +153,188 @@ function inferFromTools(pi: ExtensionAPI, mutex: ModeMutex): void {
 	}
 }
 
+function isGoalToolName(name: string): boolean {
+	const n = name.toLowerCase();
+	return n === "goal_complete" || n === "goal_blocked" || n.startsWith("goal_");
+}
+
+function isPlanEnterTool(name: string): boolean {
+	const n = name.toLowerCase();
+	return n.includes("plan") && (n.includes("enter") || n === "plan" || n.includes("plan_mode"));
+}
+
+function safeSend(pi: ExtensionAPI, text: string, deliverAs?: "followUp" | "steer"): void {
+	try {
+		if (deliverAs) pi.sendUserMessage(text, { deliverAs });
+		else pi.sendUserMessage(text);
+	} catch {
+		// ignore — command context may be mid-teardown
+	}
+}
+
 export function registerPlanGoalMutex(pi: ExtensionAPI, mutex: ModeMutex): void {
+	let lastCtx: ExtensionContext | undefined;
+	let autoPauseInFlight = false;
+
+	const requestGoalPause = (ctx: ExtensionContext, reason: string): void => {
+		if (autoPauseInFlight) return;
+		autoPauseInFlight = true;
+		ctx.ui.notify(reason, "warning");
+		safeSend(pi, "/goal pause", ctx.isIdle() ? undefined : "followUp");
+		setTimeout(() => {
+			autoPauseInFlight = false;
+		}, 1500);
+	};
+
 	pi.on("session_start", async (_event, ctx) => {
+		lastCtx = ctx;
 		hydrateFromSession(ctx, mutex);
+		syncPlanFromSession(ctx, mutex);
 		updateStatus(ctx, mutex);
 	});
 
 	pi.on("agent_start", async (_event, ctx) => {
+		lastCtx = ctx;
+		syncPlanFromSession(ctx, mutex);
 		inferFromTools(pi, mutex);
 		updateStatus(ctx, mutex);
 	});
 
 	pi.on("turn_start", async (_event, ctx) => {
+		lastCtx = ctx;
+		syncPlanFromSession(ctx, mutex);
 		inferFromTools(pi, mutex);
 		updateStatus(ctx, mutex);
 	});
 
-	// Listen for tool_call that clearly enter/exit plan or goal tooling
+	// Cross-extension: pi-goal broadcasts state on the shared event bus
+	pi.events.on(GOAL_STATE_CHANNEL, (data: unknown) => {
+		const payload = (data ?? {}) as GoalStatePayload;
+		const status = payload.status ?? "";
+		const ctx = lastCtx;
+		if (!ctx) return;
+
+		const planActive = syncPlanFromSession(ctx, mutex) || mutex.snapshot().planActive;
+
+		if (status === "active" || status === "queued") {
+			const gate = mutex.canStartGoal();
+			if (!gate.ok || planActive) {
+				mutex.setGoal(true);
+				persistMode(pi, mutex);
+				updateStatus(ctx, mutex);
+				requestGoalPause(
+					ctx,
+					gate.reason ??
+						"Cannot run goal while plan mode is active — pausing goal. Exit plan with /plan implement or /build first.",
+				);
+				return;
+			}
+			mutex.setGoal(true);
+			persistMode(pi, mutex);
+			updateStatus(ctx, mutex);
+			return;
+		}
+
+		if (status === "paused") {
+			mutex.setGoal(true);
+			persistMode(pi, mutex);
+			updateStatus(ctx, mutex);
+			return;
+		}
+		if (status === "cleared" || status === "complete" || status === "blocked") {
+			mutex.setGoal(false);
+			persistMode(pi, mutex);
+			updateStatus(ctx, mutex);
+		}
+	});
+
+	// Hard block goal tools while plan mode is active
 	pi.on("tool_call", async (event, ctx) => {
-		const name = event.toolName.toLowerCase();
-		if (name.includes("plan") && (name.includes("enter") || name === "plan")) {
+		lastCtx = ctx;
+		const name = event.toolName;
+		const planActive = syncPlanFromSession(ctx, mutex) || mutex.snapshot().planActive;
+
+		if (isGoalToolName(name) && planActive) {
+			const gate = mutex.canStartGoal();
+			return {
+				block: true,
+				reason:
+					gate.reason ??
+					"Goal tools blocked while plan mode is active. Run /plan implement or /build first.",
+			};
+		}
+
+		if (isPlanEnterTool(name)) {
 			const gate = mutex.canEnterPlan();
 			mutex.setPlan(true);
 			persistMode(pi, mutex);
 			updateStatus(ctx, mutex);
-			if (gate.pauseGoal) {
-				ctx.ui.notify("Plan entered while goal active — pause goal recommended (/goal pause).", "warning");
+			if (gate.pauseGoal && mutex.snapshot().goalActive) {
+				requestGoalPause(
+					ctx,
+					"Plan entered while goal active — auto-pausing goal (/goal pause).",
+				);
 			}
+			return undefined;
 		}
-		if (name.includes("plan") && (name.includes("exit") || name.includes("implement") || name.includes("finalize"))) {
+
+		const lower = name.toLowerCase();
+		if (lower.includes("plan") && (lower.includes("exit") || lower.includes("implement") || lower.includes("finalize"))) {
 			mutex.setPlan(false);
 			persistMode(pi, mutex);
 			updateStatus(ctx, mutex);
 		}
 		if (name === "goal_complete" || name === "goal_blocked") {
-			// still "in goal" until cleared; leave goalActive as-is
 			updateStatus(ctx, mutex);
 		}
 		return undefined;
 	});
 
 	pi.registerCommand("build", {
-		description: "Exit plan mode guidance — prefer /plan implement; marks plan inactive in harness mutex",
+		description: "Exit plan mode and implement the proposed plan (runs /plan implement)",
 		handler: async (_args, ctx) => {
+			lastCtx = ctx;
+			const planEnabled = syncPlanFromSession(ctx, mutex);
+			if (!planEnabled && !mutex.snapshot().planActive) {
+				ctx.ui.notify(
+					"Plan mode does not appear active. If you have a proposed plan, try `/plan implement` directly.",
+					"warning",
+				);
+			}
+
+			ctx.ui.notify("Running /plan implement…", "info");
+			try {
+				// Extension commands are executed by sendUserMessage → prompt → _tryExecuteExtensionCommand
+				pi.sendUserMessage("/plan implement");
+			} catch (err) {
+				const detail = err instanceof Error ? err.message : String(err);
+				ctx.ui.notify(`Failed to run /plan implement: ${detail}`, "error");
+				return;
+			}
+
 			mutex.setPlan(false);
 			persistMode(pi, mutex);
 			updateStatus(ctx, mutex);
-			ctx.ui.notify(
-				"Harness: plan marked inactive. If still in plan-mode tools, run `/plan implement` (or the plan package’s exit command) to fully leave plan.",
-				"info",
-			);
-			// Nudge the agent with a user-visible follow-up only when idle guidance helps
-			if (ctx.isIdle()) {
-				pi.sendUserMessage(
-					"Please exit plan mode and continue implementation (equivalent to /plan implement).",
-					{ deliverAs: "followUp" },
-				);
-			}
 		},
 	});
 
 	pi.registerCommand("harness-mode", {
 		description: "Show qi-harness plan/goal mutex state",
 		handler: async (_args, ctx) => {
+			lastCtx = ctx;
+			syncPlanFromSession(ctx, mutex);
 			const snap = mutex.snapshot();
+			const planSession = readPlanModeEnabled(ctx);
 			const lines = [
 				"qi-harness mode",
-				`  planActive:           ${snap.planActive}`,
+				`  planActive (mutex):   ${snap.planActive}`,
+				`  planActive (session): ${planSession}`,
 				`  goalActive:           ${snap.goalActive}`,
 				`  pauseGoalRequested:   ${snap.pauseGoalRequested}`,
 				"",
-				"Rules: cannot start goal while plan active; entering plan while goal active requests pause.",
+				"Rules: cannot start goal while plan active (auto /goal pause + tool block);",
+				"entering plan while goal active requests pause.",
+				"Use /build or /plan implement to leave plan and implement.",
 			];
 			ctx.ui.notify(lines.join("\n"), "info");
 		},
@@ -202,6 +342,7 @@ export function registerPlanGoalMutex(pi: ExtensionAPI, mutex: ModeMutex): void 
 
 	// P2: network failure → /goal pause when goal appears active
 	pi.on("agent_end", async (event, ctx) => {
+		lastCtx = ctx;
 		const snap = mutex.snapshot();
 		if (!snap.goalActive) return;
 
@@ -217,11 +358,6 @@ export function registerPlanGoalMutex(pi: ExtensionAPI, mutex: ModeMutex): void 
 
 		if (!looksLikeNetworkError(lastAssistantText)) return;
 
-		ctx.ui.notify("Network-like error while goal active — sending /goal pause.", "warning");
-		try {
-			pi.sendUserMessage("/goal pause", { deliverAs: "followUp" });
-		} catch {
-			ctx.ui.notify("Failed to send /goal pause automatically.", "error");
-		}
+		requestGoalPause(ctx, "Network-like error while goal active — sending /goal pause.");
 	});
 }

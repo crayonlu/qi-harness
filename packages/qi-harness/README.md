@@ -15,10 +15,10 @@ pi install npm:@crayonlu/qi-harness
 
 | Area | Capability |
 |------|------------|
-| Modes | `/plan` + `/build` guidance, `/goal` (pin `@narumitw/pi-goal`), plan↔goal mutex |
+| Modes | `/plan` + `/build` (→ `/plan implement`), `/goal`, plan↔goal mutex (tool block + auto-pause) |
 | Agents | `pi-subagents` — blocking / background / parallel, model inherit |
-| Tools | MCP (`pi-mcp-adapter`), ask-user, todo, `/btw`, LSP, bash background (`process`), `/rewind`, `/cleanup` |
-| UX | Slash secondary categories, `/harness-diff` responsive +/- split |
+| Tools | MCP, ask-user, todo, `/btw`, LSP, bash-bg (`process` + `/ps`), `/rewind`, `/cleanup`, statusline, retry |
+| UX | Slash secondary categories, edit/write split diff, `/harness-diff` |
 
 ## Queue (Pi native — not reinvented)
 
@@ -37,7 +37,8 @@ pi install npm:@crayonlu/qi-harness
 | `/harness-doctor` | Conflicts, Pi version, expected commands (`--force` demotes hard fails) |
 | `/harness-mode` | Plan/goal mutex snapshot |
 | `/harness-diff <old> <new>` | Split (width>120) or stacked +/- diff |
-| `/build` | Mark plan inactive + guidance to `/plan implement` |
+| `/build` | Runs `/plan implement` — exit plan and implement |
+| `/ps` `/ps:logs` `/ps:kill` `/ps:clear` | Background process UI |
 | `/cleanup` | Janitor for `~/.pi` cruft (≠ `/compact`) |
 | `/goal` `/plan` `/btw` `/todos` `/rewind` `/mcp` … | From bundled Pin / owned packages |
 

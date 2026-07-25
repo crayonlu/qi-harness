@@ -36,6 +36,8 @@
       "./node_modules/@narumitw/pi-lsp/src/index.ts",
       "./node_modules/@narumitw/pi-plan-mode/src/index.ts",
       "./node_modules/@narumitw/pi-goal/src/index.ts",
+      "./node_modules/@narumitw/pi-statusline/src/index.ts",
+      "./node_modules/@narumitw/pi-retry/src/index.ts",
       "./node_modules/@juicesharp/rpiv-ask-user-question/index.ts",
       "./node_modules/@juicesharp/rpiv-todo/index.ts",
       "./node_modules/@juicesharp/rpiv-btw/index.ts",
@@ -59,6 +61,8 @@
     "@narumitw/pi-goal": "0.28.0",
     "@narumitw/pi-lsp": "0.29.0",
     "@narumitw/pi-plan-mode": "0.28.0",
+    "@narumitw/pi-retry": "0.28.0",
+    "@narumitw/pi-statusline": "0.28.0",
     "pi-mcp-adapter": "2.13.0",
     "pi-subagents": "0.36.0"
   },
@@ -72,6 +76,8 @@
     "@narumitw/pi-goal",
     "@narumitw/pi-lsp",
     "@narumitw/pi-plan-mode",
+    "@narumitw/pi-retry",
+    "@narumitw/pi-statusline",
     "pi-mcp-adapter",
     "pi-subagents"
   ],
@@ -81,9 +87,15 @@
     "typebox": "*"
   },
   "peerDependenciesMeta": {
-    "@earendil-works/pi-coding-agent": { "optional": true },
-    "@earendil-works/pi-tui": { "optional": true },
-    "typebox": { "optional": true }
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    },
+    "@earendil-works/pi-tui": {
+      "optional": true
+    },
+    "typebox": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "0.82.0",
@@ -93,5 +105,20 @@
   },
   "engines": {
     "node": ">=22"
-  }
+  },
+  "bundleDependencies": [
+    "@crayonlu/qi-bash-bg",
+    "@crayonlu/qi-cleanup",
+    "@crayonlu/qi-rewind",
+    "@juicesharp/rpiv-ask-user-question",
+    "@juicesharp/rpiv-btw",
+    "@juicesharp/rpiv-todo",
+    "@narumitw/pi-goal",
+    "@narumitw/pi-lsp",
+    "@narumitw/pi-plan-mode",
+    "@narumitw/pi-retry",
+    "@narumitw/pi-statusline",
+    "pi-mcp-adapter",
+    "pi-subagents"
+  ]
 }

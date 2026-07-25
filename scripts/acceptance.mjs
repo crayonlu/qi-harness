@@ -15,8 +15,12 @@ assert.equal(harnessPkg.version, "1.0.0");
 assert.ok(harnessPkg.bundledDependencies?.includes("pi-subagents"));
 assert.ok(harnessPkg.bundledDependencies?.includes("@narumitw/pi-goal"));
 assert.equal(harnessPkg.dependencies["@narumitw/pi-goal"], "0.28.0");
+assert.equal(harnessPkg.dependencies["@narumitw/pi-statusline"], "0.28.0");
+assert.equal(harnessPkg.dependencies["@narumitw/pi-retry"], "0.28.0");
 assert.equal(harnessPkg.dependencies["pi-subagents"], "0.36.0");
 assert.equal(harnessPkg.dependencies["pi-mcp-adapter"], "2.13.0");
+assert.ok(harnessPkg.bundledDependencies?.includes("@narumitw/pi-statusline"));
+assert.ok(harnessPkg.bundledDependencies?.includes("@narumitw/pi-retry"));
 
 const mutexUrl = pathToFileURL(join(root, "packages/qi-harness/src/mode/mutex.ts")).href;
 const doctorUrl = pathToFileURL(join(root, "packages/qi-harness/src/commands/doctor.ts")).href;

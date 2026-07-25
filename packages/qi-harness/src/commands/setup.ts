@@ -12,17 +12,18 @@ import {
 const DEFAULT_MIN_PI = "0.80.6";
 
 const BUNDLED_CAPABILITIES: ReadonlyArray<{ name: string; stage: string }> = [
-	{ name: "plan / build", stage: "P0" },
-	{ name: "goal", stage: "P0" },
+	{ name: "plan / build (→ /plan implement)", stage: "P0" },
+	{ name: "goal + plan↔goal mutex", stage: "P0" },
 	{ name: "subagents (bg / blocking / parallel)", stage: "P0" },
 	{ name: "MCP adapter", stage: "P0" },
 	{ name: "ask / todo / btw", stage: "P0" },
 	{ name: "cleanup", stage: "P0" },
 	{ name: "slash categories", stage: "P0" },
-	{ name: "bash-bg", stage: "P1" },
+	{ name: "bash-bg (/ps + process tool)", stage: "P1" },
 	{ name: "rewind", stage: "P1" },
 	{ name: "LSP", stage: "P1" },
-	{ name: "split diff", stage: "P1" },
+	{ name: "split diff (edit/write + /harness-diff)", stage: "P1" },
+	{ name: "statusline + retry", stage: "P2" },
 ];
 
 function collectExtensionPaths(pi: ExtensionAPI): string[] {
