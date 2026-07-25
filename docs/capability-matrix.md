@@ -20,7 +20,7 @@ Document these freezes in `/harness-setup` and README. Do not imply `#11` or `#1
 
 | # | Capability | Stage | Delivery | Notes |
 |---|------------|-------|----------|-------|
-| 1 | Slash secondary categories | **P0** | Owned UX (`slash-categories.ts`) | Sort `/` suggestions by group; no description tags / icons |
+| 1 | Slash secondary categories | **P0** | Owned UX (`slash-categories.ts`) | `/` menu shows plain category headers (Builtin / Session / …) above each group |
 | 2 | Subagent bg / blocking / parallel | **P0** | Pin `pi-subagents` | Doctor rejects dual subagent stacks |
 | 3 | Plan / build | **P0** | Pin `@narumitw/pi-plan-mode` + `/build` → `/plan implement` | Mutex with goal |
 | 4 | Ask user question | **P0** | Pin `@juicesharp/rpiv-ask-user-question` | — |

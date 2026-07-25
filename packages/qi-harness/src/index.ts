@@ -21,7 +21,7 @@ export type { SlashCategory } from "./ux/slash-categories.js";
 export { ModeMutex } from "./mode/mutex.js";
 export { runDoctorChecks, compareSemverIsh } from "./commands/doctor.js";
 export { formatSplitDiff } from "./ux/diff-split.js";
-export { matchCommandCategory, CATEGORY_ORDER, regroupSlashSuggestions } from "./ux/slash-categories.js";
+export { matchCommandCategory, CATEGORY_ORDER, regroupSlashSuggestions, isCategoryHeader } from "./ux/slash-categories.js";
 export { looksLikeNetworkError, readPlanModeEnabled } from "./adapters/plan-goal.js";
 
 const LOADED_ENTRY = "qi-harness-loaded";

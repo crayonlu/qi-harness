@@ -1,9 +1,9 @@
 /**
  * Slash-command secondary categories for autocomplete.
  *
- * Wraps AutocompleteProvider so `/` completions are sorted by category group
- * (Builtin → Session → Agent → Tools → MCP → Goal → Other), then by name.
- * Descriptions are left unchanged — no tags, icons, or prefixes (Pi-native look).
+ * Wraps AutocompleteProvider so `/` completions show a Pi-style secondary menu:
+ * plain category headers (Builtin, Session, …) above each group, then commands
+ * sorted by name. No emoji, no tags, no gradients.
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -20,6 +20,9 @@ export const CATEGORY_ORDER: readonly SlashCategory[] = [
 	"Goal",
 	"Other",
 ] as const;
+
+/** Sentinel value prefix for non-selectable category header rows. */
+export const CATEGORY_HEADER_PREFIX = "\0qi-cat:";
 
 const CATEGORY_RANK = new Map<SlashCategory, number>(
 	CATEGORY_ORDER.map((c, i) => [c, i]),
@@ -75,14 +78,25 @@ export function matchCommandCategory(name: string): SlashCategory {
 		}
 	}
 
-	// Heuristic prefixes for extension-namespaced commands
 	if (base.startsWith("mcp") || base.includes("mcp-")) return "MCP";
 	if (base.startsWith("goal") || base.includes("goal-")) return "Goal";
 	if (base.startsWith("lsp") || base.includes("lsp-")) return "Tools";
 	if (base.startsWith("process") || base.startsWith("ps")) return "Tools";
 	if (base.startsWith("subagent") || base === "run") return "Agent";
+	if (base.startsWith("harness-")) return "Tools";
 
 	return "Other";
+}
+
+export function isCategoryHeader(item: AutocompleteItem): boolean {
+	return typeof item.value === "string" && item.value.startsWith(CATEGORY_HEADER_PREFIX);
+}
+
+function categoryHeader(cat: SlashCategory): AutocompleteItem {
+	return {
+		value: `${CATEGORY_HEADER_PREFIX}${cat}`,
+		label: cat,
+	};
 }
 
 function categoryRank(cat: SlashCategory): number {
@@ -90,18 +104,43 @@ function categoryRank(cat: SlashCategory): number {
 }
 
 /**
- * Sort suggestions by category order, then name. Does not mutate descriptions.
+ * Insert plain category headers and sort commands within each group.
+ * Headers are not real commands (applyCompletion no-ops on them).
  */
 export function regroupSlashSuggestions(items: AutocompleteItem[]): AutocompleteItem[] {
-	return [...items].sort((a, b) => {
-		const ca = matchCommandCategory(a.value || a.label);
-		const cb = matchCommandCategory(b.value || b.label);
-		const cr = categoryRank(ca) - categoryRank(cb);
-		if (cr !== 0) return cr;
-		const an = (a.value || a.label).toLowerCase();
-		const bn = (b.value || b.label).toLowerCase();
-		return an.localeCompare(bn);
-	});
+	const buckets = new Map<SlashCategory, AutocompleteItem[]>();
+	for (const item of items) {
+		if (isCategoryHeader(item)) continue;
+		const cat = matchCommandCategory(item.value || item.label);
+		const list = buckets.get(cat) ?? [];
+		list.push(item);
+		buckets.set(cat, list);
+	}
+
+	const out: AutocompleteItem[] = [];
+	for (const cat of CATEGORY_ORDER) {
+		const group = buckets.get(cat);
+		if (!group || group.length === 0) continue;
+		group.sort((a, b) => {
+			const an = (a.value || a.label).toLowerCase();
+			const bn = (b.value || b.label).toLowerCase();
+			return an.localeCompare(bn);
+		});
+		out.push(categoryHeader(cat));
+		out.push(...group);
+	}
+
+	// Stable fallback if somehow empty categories
+	if (out.length === 0) {
+		return [...items].sort((a, b) => {
+			const cr =
+				categoryRank(matchCommandCategory(a.value || a.label)) -
+				categoryRank(matchCommandCategory(b.value || b.label));
+			if (cr !== 0) return cr;
+			return (a.value || a.label).toLowerCase().localeCompare((b.value || b.label).toLowerCase());
+		});
+	}
+	return out;
 }
 
 /** True when the cursor is inside a slash-command token (starts with `/`, no space yet). */
@@ -115,8 +154,13 @@ function wrapProvider(current: AutocompleteProvider): AutocompleteProvider {
 	return {
 		triggerCharacters: current.triggerCharacters,
 		shouldTriggerFileCompletion: current.shouldTriggerFileCompletion?.bind(current),
-		applyCompletion: (lines, cursorLine, cursorCol, item, prefix) =>
-			current.applyCompletion(lines, cursorLine, cursorCol, item, prefix),
+		applyCompletion: (lines, cursorLine, cursorCol, item, prefix) => {
+			// Category headers are menu chrome only — do not insert into the editor
+			if (isCategoryHeader(item)) {
+				return { lines, cursorLine, cursorCol };
+			}
+			return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
+		},
 		async getSuggestions(lines, cursorLine, cursorCol, options): Promise<AutocompleteSuggestions | null> {
 			const result = await current.getSuggestions(lines, cursorLine, cursorCol, options);
 			if (!result || result.items.length === 0) return result;
@@ -130,7 +174,7 @@ function wrapProvider(current: AutocompleteProvider): AutocompleteProvider {
 }
 
 /**
- * On session_start, stack an autocomplete wrapper that regroups `/` suggestions.
+ * On session_start, stack an autocomplete wrapper that shows `/` secondary categories.
  */
 export function registerSlashCategories(pi: ExtensionAPI): void {
 	pi.on("session_start", async (_event, ctx) => {

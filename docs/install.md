@@ -8,7 +8,7 @@
 ## From npm
 
 ```bash
-pi install npm:@crayonlu/qi-harness@1.0.0
+pi install npm:@crayonlu/qi-harness
 ```
 
 Restart Pi or run `/reload`, then:
@@ -16,6 +16,24 @@ Restart Pi or run `/reload`, then:
 ```text
 /harness-setup
 /harness-doctor
+```
+
+Typing `/` should show a secondary menu with category headers (Builtin, Session, Agent, Tools, MCP, Goal, …).
+
+## Publishing (maintainers)
+
+Scoped packages default private on npm. This repo sets `access=public` in `.npmrc` and each package’s `publishConfig`. Prefer:
+
+```bash
+npm run publish:public
+```
+
+That publishes with `--access public` and verifies the package is readable without auth (re-runs `npm access set status=public` if needed).
+
+Optional global default for your machine:
+
+```bash
+npm config set access public --global
 ```
 
 ## From this monorepo (dev)

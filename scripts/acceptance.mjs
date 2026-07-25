@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const harnessPkg = JSON.parse(readFileSync(join(root, "packages/qi-harness/package.json"), "utf8"));
 
-assert.equal(harnessPkg.version, "1.0.3");
+assert.equal(harnessPkg.version, "1.0.4");
 assert.ok(harnessPkg.bundledDependencies?.includes("pi-subagents"));
 assert.ok(harnessPkg.bundledDependencies?.includes("@narumitw/pi-goal"));
 assert.equal(harnessPkg.dependencies["@narumitw/pi-goal"], "0.28.0");

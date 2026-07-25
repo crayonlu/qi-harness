@@ -1,6 +1,6 @@
 {
   "name": "@crayonlu/qi-harness",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Production omnibus Pi extension: plan/build, goal, subagents, MCP, ask/todo/btw, cleanup, slash categories, bash-bg, rewind, LSP, split diff.",
   "type": "module",
   "license": "MIT",

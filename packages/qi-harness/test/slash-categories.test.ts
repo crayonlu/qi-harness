@@ -51,7 +51,7 @@ describe("CATEGORY_ORDER", () => {
 });
 
 describe("regroupSlashSuggestions", () => {
-	it("sorts by category then name without altering descriptions", () => {
+	it("inserts category headers and sorts commands within groups", () => {
 		const items = regroupSlashSuggestions([
 			{ value: "goal", label: "/goal", description: "manage goal" },
 			{ value: "model", label: "/model", description: "pick model" },
@@ -60,21 +60,28 @@ describe("regroupSlashSuggestions", () => {
 			{ value: "aaa-custom", label: "/aaa-custom", description: "custom" },
 		]);
 
-		expect(items.map((i) => i.value)).toEqual(["model", "plan", "mcp", "goal", "aaa-custom"]);
-		expect(items.map((i) => i.description)).toEqual([
-			"pick model",
-			"plan mode",
-			"mcp tools",
-			"manage goal",
-			"custom",
+		expect(items.map((i) => i.label)).toEqual([
+			"Builtin",
+			"/model",
+			"Session",
+			"/plan",
+			"MCP",
+			"/mcp",
+			"Goal",
+			"/goal",
+			"Other",
+			"/aaa-custom",
 		]);
+		expect(items.filter((i) => i.label === "Builtin" || i.label === "Session").every((i) => i.value.startsWith("\0qi-cat:"))).toBe(
+			true,
+		);
+		// Command descriptions unchanged (no [Category] tags)
+		expect(items.find((i) => i.value === "model")?.description).toBe("pick model");
 	});
 
-	it("preserves existing descriptions verbatim", () => {
-		const items = regroupSlashSuggestions([
-			{ value: "model", label: "/model", description: "pick model" },
-		]);
-		expect(items[0]?.description).toBe("pick model");
+	it("omits empty category headers", () => {
+		const items = regroupSlashSuggestions([{ value: "model", label: "/model", description: "pick model" }]);
+		expect(items.map((i) => i.label)).toEqual(["Builtin", "/model"]);
 	});
 });
 
