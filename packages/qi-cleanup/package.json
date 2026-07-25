@@ -1,14 +1,27 @@
 {
   "name": "@crayonlu/qi-cleanup",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Manual janitor for ~/.pi cruft: DS_Store, dead stats-pid, empty session dirs, idle sessions, stale subagent runs.",
   "type": "module",
   "license": "MIT",
-  "keywords": ["pi-package", "pi-extension", "cleanup", "qi-harness"],
-  "files": ["extensions", "README.md", "LICENSE"],
-  "publishConfig": { "access": "public" },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "cleanup",
+    "qi-harness"
+  ],
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "pi": {
-    "extensions": ["./extensions/cleanup.ts"]
+    "extensions": [
+      "./extensions/cleanup.ts"
+    ]
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
@@ -18,8 +31,12 @@
     "typebox": "*"
   },
   "peerDependenciesMeta": {
-    "@earendil-works/pi-coding-agent": { "optional": true },
-    "typebox": { "optional": true }
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    },
+    "typebox": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "0.82.0",

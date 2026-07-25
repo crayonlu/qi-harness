@@ -1,14 +1,28 @@
 {
   "name": "@crayonlu/qi-bash-bg",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Background process tool for Pi: start/logs/wait/kill without blocking the conversation.",
   "type": "module",
   "license": "MIT",
-  "keywords": ["pi-package", "pi-extension", "background", "process", "qi-harness"],
-  "files": ["src", "README.md", "LICENSE"],
-  "publishConfig": { "access": "public" },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "background",
+    "process",
+    "qi-harness"
+  ],
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "pi": {
-    "extensions": ["./src/index.ts"]
+    "extensions": [
+      "./src/index.ts"
+    ]
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -21,10 +35,18 @@
     "typebox": "*"
   },
   "peerDependenciesMeta": {
-    "@earendil-works/pi-ai": { "optional": true },
-    "@earendil-works/pi-coding-agent": { "optional": true },
-    "@earendil-works/pi-tui": { "optional": true },
-    "typebox": { "optional": true }
+    "@earendil-works/pi-ai": {
+      "optional": true
+    },
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    },
+    "@earendil-works/pi-tui": {
+      "optional": true
+    },
+    "typebox": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@earendil-works/pi-ai": "0.82.0",
