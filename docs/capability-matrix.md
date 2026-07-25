@@ -20,7 +20,7 @@ Document these freezes in `/harness-setup` and README. Do not imply `#11` or `#1
 
 | # | Capability | Stage | Delivery | Notes |
 |---|------------|-------|----------|-------|
-| 1 | Slash secondary categories | **P0** | Owned UX (`slash-categories.ts`) | Autocomplete wrapper; Builtin / Session / Agent / Tools / MCP / Goal / Other |
+| 1 | Slash secondary categories | **P0** | Owned UX (`slash-categories.ts`) | Sort `/` suggestions by group; no description tags / icons |
 | 2 | Subagent bg / blocking / parallel | **P0** | Pin `pi-subagents` | Doctor rejects dual subagent stacks |
 | 3 | Plan / build | **P0** | Pin `@narumitw/pi-plan-mode` + `/build` → `/plan implement` | Mutex with goal |
 | 4 | Ask user question | **P0** | Pin `@juicesharp/rpiv-ask-user-question` | — |
@@ -56,7 +56,7 @@ Document these freezes in `/harness-setup` and README. Do not imply `#11` or `#1
 ### P2 — polish
 
 - Goal: network-like failure → `/goal pause` (harness listens on `agent_end`; no `session_error` event in ExtensionAPI)
-- Pin `@narumitw/pi-statusline` + `@narumitw/pi-retry`; doctor rejects statusline + starship mix
+- Pin `@narumitw/pi-retry` by default. **`pi-statusline` is optional** (not bundled) — its powerline/emoji chrome is not Pi-native; install separately if wanted, and doctor still rejects statusline+starship mixes
 - Upstream contributions: `RegisteredCommand.category`, Esc pending-submission API (enables future `#12`)
 
 ## Mode mutex (plan ↔ goal)
@@ -80,7 +80,7 @@ Document these freezes in `/harness-setup` and README. Do not imply `#11` or `#1
 
 | Kind | Packages |
 |------|----------|
-| Pin | `pi-subagents`, `pi-mcp-adapter`, `@narumitw/pi-plan-mode`, `@narumitw/pi-goal`, `@narumitw/pi-lsp`, `@narumitw/pi-statusline`, `@narumitw/pi-retry`, `@juicesharp/rpiv-*` |
+| Pin | `pi-subagents`, `pi-mcp-adapter`, `@narumitw/pi-plan-mode`, `@narumitw/pi-goal`, `@narumitw/pi-lsp`, `@narumitw/pi-retry`, `@juicesharp/rpiv-*` |
 | Owned | `@crayonlu/qi-cleanup`, `@crayonlu/qi-bash-bg`, `@crayonlu/qi-rewind`, harness UX (slash, diff, doctor, setup, mutex) |
 
 ## Explicit non-goals

@@ -51,7 +51,7 @@ describe("CATEGORY_ORDER", () => {
 });
 
 describe("regroupSlashSuggestions", () => {
-	it("prefixes descriptions and sorts by category then name", () => {
+	it("sorts by category then name without altering descriptions", () => {
 		const items = regroupSlashSuggestions([
 			{ value: "goal", label: "/goal", description: "manage goal" },
 			{ value: "model", label: "/model", description: "pick model" },
@@ -61,18 +61,20 @@ describe("regroupSlashSuggestions", () => {
 		]);
 
 		expect(items.map((i) => i.value)).toEqual(["model", "plan", "mcp", "goal", "aaa-custom"]);
-		expect(items[0]?.description).toMatch(/^\[Builtin\]/);
-		expect(items[1]?.description).toMatch(/^\[Session\]/);
-		expect(items[2]?.description).toMatch(/^\[MCP\]/);
-		expect(items[3]?.description).toMatch(/^\[Goal\]/);
-		expect(items[4]?.description).toMatch(/^\[Other\]/);
+		expect(items.map((i) => i.description)).toEqual([
+			"pick model",
+			"plan mode",
+			"mcp tools",
+			"manage goal",
+			"custom",
+		]);
 	});
 
-	it("does not double-prefix already tagged descriptions", () => {
+	it("preserves existing descriptions verbatim", () => {
 		const items = regroupSlashSuggestions([
-			{ value: "model", label: "/model", description: "[Builtin] pick model" },
+			{ value: "model", label: "/model", description: "pick model" },
 		]);
-		expect(items[0]?.description).toBe("[Builtin] pick model");
+		expect(items[0]?.description).toBe("pick model");
 	});
 });
 

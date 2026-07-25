@@ -23,7 +23,7 @@ const BUNDLED_CAPABILITIES: ReadonlyArray<{ name: string; stage: string }> = [
 	{ name: "rewind", stage: "P1" },
 	{ name: "LSP", stage: "P1" },
 	{ name: "split diff (edit/write + /harness-diff)", stage: "P1" },
-	{ name: "statusline + retry", stage: "P2" },
+	{ name: "retry", stage: "P2" },
 ];
 
 function collectExtensionPaths(pi: ExtensionAPI): string[] {
@@ -60,26 +60,22 @@ async function resolvePiVersion(): Promise<string | undefined> {
 function buildSetupMessage(report: DoctorReport, piVersion: string | undefined): string {
 	const lines: string[] = [
 		"qi-harness setup",
-		"────────────────",
-		`Install: @crayonlu/qi-harness (omnibus Pi extension)`,
-		`Pi: ${piVersion ?? "unknown"} (peer >= ${DEFAULT_MIN_PI})`,
+		`Pi ${piVersion ?? "unknown"} (peer >= ${DEFAULT_MIN_PI})`,
 		"",
-		"Bundled capabilities:",
-		...BUNDLED_CAPABILITIES.map((c) => `  [${c.stage}] ${c.name}`),
+		"Capabilities:",
+		...BUNDLED_CAPABILITIES.map((c) => `  ${c.stage}  ${c.name}`),
 		"",
-		"Queue keys (Pi native — harness does not replace them):",
-		"  Enter       = steer (interrupt / inject into current turn)",
-		"  Alt+Enter   = followUp (queue for after current turn)",
-		"  Esc         = abort streaming; restores already-queued messages to the editor",
-		"  Alt+Up      = dequeue / pull queued message back",
+		"Queue (Pi native):",
+		"  Enter      steer",
+		"  Alt+Enter  followUp",
+		"  Esc        abort; restore queued messages",
+		"  Alt+Up     pull queued message back",
 		"",
-		"NOT supported (product freeze — see docs/capability-matrix.md):",
-		"  #11  Double/empty Enter flush of the queue (not implemented; will not be claimed)",
-		"  #12  Esc early-cancel refill of the just-submitted prompt (not a product promise)",
+		"Not supported: #11 double-Enter flush; #12 Esc submit-regret refill.",
 		"",
 		formatDoctorReport(report),
 		"",
-		"Next: /harness-doctor for a re-check; /harness-mode for plan/goal state.",
+		"Commands: /harness-doctor  /harness-mode",
 	];
 	return lines.join("\n");
 }

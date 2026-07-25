@@ -37,28 +37,10 @@ export default async function (pi: ExtensionAPI): Promise<void> {
 	registerDiffSplit(pi);
 	registerEditWriteDiff(pi);
 
-	let notifiedLoad = false;
-
-	pi.on("session_start", async (_event, ctx) => {
+	pi.on("session_start", async (_event, _ctx) => {
 		pi.appendEntry(LOADED_ENTRY, {
-			version: "1.0.0",
+			version: "1.0.3",
 			at: Date.now(),
 		});
-
-		const entries = ctx.sessionManager.getEntries();
-		for (let i = entries.length - 1; i >= 0; i--) {
-			const entry = entries[i];
-			if (entry.type === "custom" && entry.customType === LOADED_ENTRY) {
-				pi.setLabel(entry.id, "qi-harness");
-				break;
-			}
-		}
-
-		ctx.ui.setStatus("qi-harness", "qi-harness");
-
-		if (!notifiedLoad) {
-			notifiedLoad = true;
-			ctx.ui.notify("qi-harness loaded", "info");
-		}
 	});
 }

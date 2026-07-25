@@ -1,8 +1,9 @@
 /**
  * Slash-command secondary categories for autocomplete.
  *
- * Wraps the current AutocompleteProvider so `/` completions are regrouped and
- * descriptions prefixed with `[Category]`.
+ * Wraps AutocompleteProvider so `/` completions are sorted by category group
+ * (Builtin → Session → Agent → Tools → MCP → Goal → Other), then by name.
+ * Descriptions are left unchanged — no tags, icons, or prefixes (Pi-native look).
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -89,27 +90,18 @@ function categoryRank(cat: SlashCategory): number {
 }
 
 /**
- * Sort suggestions: category order, then name (value).
- * Prefix description with `[Category] ` (idempotent if already prefixed).
+ * Sort suggestions by category order, then name. Does not mutate descriptions.
  */
 export function regroupSlashSuggestions(items: AutocompleteItem[]): AutocompleteItem[] {
-	const decorated = items.map((item) => {
-		const cat = matchCommandCategory(item.value || item.label);
-		const tag = `[${cat}] `;
-		const desc = item.description ?? "";
-		const description = desc.startsWith("[") ? desc : `${tag}${desc}`;
-		return { item: { ...item, description }, cat };
-	});
-
-	decorated.sort((a, b) => {
-		const cr = categoryRank(a.cat) - categoryRank(b.cat);
+	return [...items].sort((a, b) => {
+		const ca = matchCommandCategory(a.value || a.label);
+		const cb = matchCommandCategory(b.value || b.label);
+		const cr = categoryRank(ca) - categoryRank(cb);
 		if (cr !== 0) return cr;
-		const an = (a.item.value || a.item.label).toLowerCase();
-		const bn = (b.item.value || b.item.label).toLowerCase();
+		const an = (a.value || a.label).toLowerCase();
+		const bn = (b.value || b.label).toLowerCase();
 		return an.localeCompare(bn);
 	});
-
-	return decorated.map((d) => d.item);
 }
 
 /** True when the cursor is inside a slash-command token (starts with `/`, no space yet). */

@@ -18,12 +18,12 @@ export function updateStatus(state: RewindState, ctx: ExtensionContext): void {
     return;
   }
 
-  const theme = ctx.ui.theme;
   const count = state.checkpoints.size;
-  ctx.ui.setStatus(
-    STATUS_KEY,
-    theme.fg("dim", "◆ ") + theme.fg("muted", `${count} checkpoint${count === 1 ? "" : "s"}`),
-  );
+  if (count <= 0) {
+    ctx.ui.setStatus(STATUS_KEY, undefined);
+    return;
+  }
+  ctx.ui.setStatus(STATUS_KEY, ctx.ui.theme.fg("dim", `${count} ckpt`));
 }
 
 /** Clear status */

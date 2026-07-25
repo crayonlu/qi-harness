@@ -17,8 +17,8 @@ pi install npm:@crayonlu/qi-harness
 |------|------------|
 | Modes | `/plan` + `/build` (→ `/plan implement`), `/goal`, plan↔goal mutex (tool block + auto-pause) |
 | Agents | `pi-subagents` — blocking / background / parallel, model inherit |
-| Tools | MCP, ask-user, todo, `/btw`, LSP, bash-bg (`process` + `/ps`), `/rewind`, `/cleanup`, statusline, retry |
-| UX | Slash secondary categories, edit/write split diff, `/harness-diff` |
+| Tools | MCP, ask-user, todo, `/btw`, LSP, bash-bg (`process` + `/ps`), `/rewind`, `/cleanup`, retry |
+| UX | Slash regroup (no tags), edit/write +/- diff, `/harness-diff` — Pi-native chrome, no statusline/emoji |
 
 ## Queue (Pi native — not reinvented)
 

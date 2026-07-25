@@ -39,7 +39,10 @@ function colorizeDiffLines(text: string, theme: Theme): string {
 function colorizeMarkerLine(line: string, theme: Theme): string {
 	if (line.startsWith("+") && !line.startsWith("+++")) return theme.fg("success", line);
 	if (line.startsWith("-") && !line.startsWith("---")) return theme.fg("error", line);
-	if (line.startsWith("─") || line.includes("old") || line.includes("new")) {
+	if (line.startsWith("-") && line.replace(/-/g, "").length === 0) {
+		return theme.fg("dim", line);
+	}
+	if (line.includes("old") || line.includes("new")) {
 		return theme.fg("dim", line);
 	}
 	return theme.fg("dim", line);

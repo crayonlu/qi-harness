@@ -83,8 +83,9 @@ function updateStatus(ctx: ExtensionContext, mutex: ModeMutex): void {
 	const snap = mutex.snapshot();
 	const parts: string[] = [];
 	if (snap.planActive) parts.push("plan");
-	if (snap.goalActive) parts.push(snap.pauseGoalRequested ? "goal(pause?)" : "goal");
-	ctx.ui.setStatus(STATUS_KEY, parts.length > 0 ? `mode:${parts.join("+")}` : "mode:build");
+	if (snap.goalActive) parts.push(snap.pauseGoalRequested ? "goal*" : "goal");
+	// Quiet: only show when a mode is active; no default "mode:build" chrome
+	ctx.ui.setStatus(STATUS_KEY, parts.length > 0 ? parts.join("+") : undefined);
 }
 
 function hydrateFromSession(ctx: ExtensionContext, mutex: ModeMutex): void {

@@ -69,7 +69,7 @@ function formatSideBySide(oldLines: string[], newLines: string[], width: number)
 	const header =
 		pad(truncate("- old", leftW), leftW) + sep + pad(truncate("+ new", rightW), rightW);
 	out.push(header);
-	out.push("─".repeat(Math.min(width, header.length)));
+	out.push("-".repeat(Math.min(width, header.length)));
 
 	const max = Math.max(oldLines.length, newLines.length);
 	for (let i = 0; i < max; i++) {
