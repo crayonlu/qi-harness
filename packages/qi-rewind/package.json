@@ -1,0 +1,29 @@
+{
+  "name": "@crayonlu/qi-rewind",
+  "version": "1.0.0",
+  "description": "Checkpoint/rewind for Pi: /rewind, Esc+Esc, git snapshots, redo stack.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["pi-package", "pi-extension", "rewind", "checkpoint", "qi-harness"],
+  "files": ["src", "README.md", "LICENSE"],
+  "publishConfig": { "access": "public" },
+  "pi": {
+    "extensions": ["./src/index.ts"]
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --dir test",
+    "test:selftest": "npx --yes tsx test/core.selftest.ts"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=0.80.6"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": { "optional": true }
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.82.0",
+    "@types/node": "22.15.30",
+    "typescript": "5.9.3"
+  }
+}

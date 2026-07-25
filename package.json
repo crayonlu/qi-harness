@@ -1,0 +1,26 @@
+{
+  "name": "qi-harness-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "qi-harness monorepo — production Pi omnibus extension",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "check": "npm run typecheck && npm run test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "pack:harness": "npm pack -w @crayonlu/qi-harness"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}
